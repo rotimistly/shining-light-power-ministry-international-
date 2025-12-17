@@ -127,14 +127,24 @@ const MediaManager = () => {
         const fileName = `${Date.now()}.${fileExt}`;
         const filePath = `uploads/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
+        console.log("Uploading file:", filePath, "Size:", selectedFile.size);
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
           .from("media")
-          .upload(filePath, selectedFile);
+          .upload(filePath, selectedFile, {
+            cacheControl: '3600',
+            upsert: false
+          });
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error("Upload error details:", uploadError);
+          throw new Error(`Upload failed: ${uploadError.message}`);
+        }
 
+        console.log("Upload successful:", uploadData);
         const { data: urlData } = supabase.storage.from("media").getPublicUrl(filePath);
         image_url = urlData.publicUrl;
+        console.log("Public URL:", image_url);
       }
 
       await createMutation.mutateAsync({
@@ -144,8 +154,13 @@ const MediaManager = () => {
         video_url: formData.media_type === "Video" ? formData.video_url : undefined,
         image_url,
       });
-    } catch (error) {
-      toast({ title: "Failed to upload media", variant: "destructive" });
+    } catch (error: any) {
+      console.error("Full error:", error);
+      toast({ 
+        title: "Failed to upload media", 
+        description: error.message || "Please try again",
+        variant: "destructive" 
+      });
     } finally {
       setIsUploading(false);
     }
