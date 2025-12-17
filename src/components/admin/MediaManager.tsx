@@ -148,9 +148,9 @@ const MediaManager = () => {
       }
 
       await createMutation.mutateAsync({
-        media_type: formData.media_type,
+        media_type: formData.media_type.toLowerCase(),
         category: formData.category,
-        text_content: formData.media_type === "Text" ? formData.text_content : undefined,
+        text_content: formData.media_type === "Image" ? undefined : formData.text_content || undefined,
         video_url: formData.media_type === "Video" ? formData.video_url : undefined,
         image_url,
       });
@@ -167,10 +167,10 @@ const MediaManager = () => {
   };
 
   const getMediaIcon = (type: string) => {
-    switch (type) {
-      case "Image":
+    switch (type.toLowerCase()) {
+      case "image":
         return <Image className="h-5 w-5" />;
-      case "Video":
+      case "video":
         return <Video className="h-5 w-5" />;
       default:
         return <FileText className="h-5 w-5" />;
@@ -206,7 +206,7 @@ const MediaManager = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {media?.map((item) => (
             <Card key={item.id} className="overflow-hidden">
-              {item.media_type === "Image" && item.image_url && (
+              {item.media_type === "image" && item.image_url && (
                 <div className="aspect-video bg-muted">
                   <img
                     src={item.image_url}
@@ -215,12 +215,12 @@ const MediaManager = () => {
                   />
                 </div>
               )}
-              {item.media_type === "Video" && (
+              {item.media_type === "video" && (
                 <div className="aspect-video bg-muted flex items-center justify-center">
                   <Video className="h-12 w-12 text-muted-foreground" />
                 </div>
               )}
-              {item.media_type === "Text" && (
+              {item.media_type === "text" && (
                 <div className="aspect-video bg-muted p-4 overflow-hidden">
                   <p className="text-sm line-clamp-6">{item.text_content}</p>
                 </div>
