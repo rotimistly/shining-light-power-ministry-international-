@@ -61,7 +61,7 @@ export function Footer() {
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-primary mt-0.5" />
                 <span className="text-secondary-foreground/80">
-                  123 Faith Avenue, City
+                  Agbarho, Before the High Tension, Delta State, Nigeria
                 </span>
               </li>
               <li className="flex items-center gap-3">
