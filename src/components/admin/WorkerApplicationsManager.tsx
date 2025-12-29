@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Trash2, Mail, Phone, User } from "lucide-react";
+import { Loader2, Trash2, Mail, Phone, User, Check, X } from "lucide-react";
 import { format } from "date-fns";
 import {
   AlertDialog,
@@ -50,6 +50,37 @@ const WorkerApplicationsManager = () => {
     },
   });
 
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { error } = await supabase
+        .from("worker_applications")
+        .update({ status })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: (_, { status }) => {
+      queryClient.invalidateQueries({ queryKey: ["worker-applications"] });
+      toast({ 
+        title: `Application ${status}`,
+        description: `The application has been ${status}.`
+      });
+    },
+    onError: () => {
+      toast({ title: "Failed to update application status", variant: "destructive" });
+    },
+  });
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "approved":
+        return <Badge className="bg-green-500 hover:bg-green-600">Approved</Badge>;
+      case "rejected":
+        return <Badge variant="destructive">Rejected</Badge>;
+      default:
+        return <Badge variant="secondary">Pending</Badge>;
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center py-12">
@@ -78,11 +109,14 @@ const WorkerApplicationsManager = () => {
             <Card key={app.id} className="overflow-hidden">
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-lg">{app.full_name}</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      Submitted {format(new Date(app.date_submitted), "PPP")}
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <CardTitle className="text-lg">{app.full_name}</CardTitle>
+                      <p className="text-sm text-muted-foreground">
+                        Submitted {format(new Date(app.date_submitted), "PPP")}
+                      </p>
+                    </div>
+                    {getStatusBadge((app as any).status || "pending")}
                   </div>
                   <Button
                     variant="ghost"
@@ -125,6 +159,30 @@ const WorkerApplicationsManager = () => {
                   <div className="text-sm">
                     <span className="text-muted-foreground">Experience:</span>
                     <p className="mt-1 text-foreground">{app.previous_experience}</p>
+                  </div>
+                )}
+                
+                {/* Approve/Reject buttons */}
+                {((app as any).status === "pending" || !(app as any).status) && (
+                  <div className="flex gap-2 pt-2 border-t">
+                    <Button
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700"
+                      onClick={() => updateStatusMutation.mutate({ id: app.id, status: "approved" })}
+                      disabled={updateStatusMutation.isPending}
+                    >
+                      <Check className="h-4 w-4 mr-1" />
+                      Approve
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => updateStatusMutation.mutate({ id: app.id, status: "rejected" })}
+                      disabled={updateStatusMutation.isPending}
+                    >
+                      <X className="h-4 w-4 mr-1" />
+                      Reject
+                    </Button>
                   </div>
                 )}
               </CardContent>
