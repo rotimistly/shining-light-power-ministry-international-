@@ -299,6 +299,7 @@ export default function Join() {
                         >
                           <Checkbox
                             checked={isSelected}
+                            onClick={(e) => e.stopPropagation()}
                             onCheckedChange={() => handleDepartmentToggle(dept.id)}
                           />
                           <div className="flex-1">
